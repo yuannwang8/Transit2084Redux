@@ -6,9 +6,11 @@ import astropy.units as u
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def readPlotTable():
     print('read Event Table')
-    return Table.read('GeocentricPlotTable.ecsv', format = 'ascii.ecsv')
+    return Table.read('GeocentricPlotTable.ecsv', format='ascii.ecsv')
+
 
 GeoPlotTable = readPlotTable()
 GeoPlotTable.pprint_all()
@@ -25,6 +27,7 @@ GeoPlotTable.pprint_all()
 # plt.show()
 # plt.close()
 
+# remove rows starting with Tflag - keep calculated rows only
 ijk = []
 for ii in range(len(GeoPlotTable)):
     if GeoPlotTable['Event'][ii].startswith('Tflag'):
@@ -33,63 +36,82 @@ for ii in range(len(GeoPlotTable)):
 GeoPlotTable.remove_rows(ijk)
 
 zTime = GeoPlotTable['datetime_str']
-zTime = [s.replace('2084-Nov-10 ','') for s in zTime]
-zTime = [s.replace('.000','') for s in zTime]
+zTime = [s.replace('2084-Nov-10 ', '') for s in zTime]
+zTime = [s.replace('.000', '') for s in zTime]
 
-fig = plt.figure(figsize=(8,6))
+# Plot 1: solar disk centered
+fig = plt.figure(figsize=(8, 6))
 ax = fig.add_subplot(111)
-colormap = iter(plt.cm.rainbow(np.linspace(0,1,len(GeoPlotTable))))
-ax.scatter(0,0, color='gray', marker='+')
+# center of solar disk
+ax.scatter(0, 0, color='gray', marker='+')
+# each event gets its own colour
+colormap = iter(plt.cm.rainbow(np.linspace(0, 1, len(GeoPlotTable))))
 for ii in range(len(GeoPlotTable)):
-    color=next(colormap)
+    color = next(colormap)
     theta = np.linspace(0, 2*np.pi, 100)
     r = (GeoPlotTable['S_ang_width'][ii]/2)/3600
-    x = r*np.cos(theta) + GeoPlotTable['S_RA_app'][ii]-GeoPlotTable['S_RA_app'][ii]
-    y = r*np.sin(theta) + GeoPlotTable['S_DEC_app'][ii]-GeoPlotTable['S_DEC_app'][ii]
-    ax.plot(-x,y,color=color,alpha=0.5, label = GeoPlotTable['Object'][ii] + " "+ GeoPlotTable['Event'][ii] + " "+ zTime[ii])
+    x = (r*np.cos(theta) + GeoPlotTable['S_RA_app'][ii] -
+         GeoPlotTable['S_RA_app'][ii])
+    y = (r*np.sin(theta) + GeoPlotTable['S_DEC_app'][ii] -
+         GeoPlotTable['S_DEC_app'][ii])
+    ax.plot(-x, y, color=color, alpha=0.5,
+            label=GeoPlotTable['Object'][ii] + " " +
+            GeoPlotTable['Event'][ii] + " " + zTime[ii])
     r = (GeoPlotTable['T_ang_width'][ii]/2)/3600
-    x = r*np.cos(theta) + GeoPlotTable['T_RA_app'][ii]-GeoPlotTable['S_RA_app'][ii]
-    y = r*np.sin(theta) + GeoPlotTable['T_DEC_app'][ii]-GeoPlotTable['S_DEC_app'][ii]
-    ax.plot(-x,y,color=color,alpha=0.9)
+    x = (r*np.cos(theta) + GeoPlotTable['T_RA_app'][ii] -
+         GeoPlotTable['S_RA_app'][ii])
+    y = (r*np.sin(theta) + GeoPlotTable['T_DEC_app'][ii] -
+         GeoPlotTable['S_DEC_app'][ii])
+    ax.plot(-x, y, color=color, alpha=0.9)
     r = (GeoPlotTable['L_ang_width'][ii]/2)/3600
-    x = r*np.cos(theta) + GeoPlotTable['L_RA_app'][ii]-GeoPlotTable['S_RA_app'][ii]
-    y = r*np.sin(theta) + GeoPlotTable['L_DEC_app'][ii]-GeoPlotTable['S_DEC_app'][ii]
-    ax.plot(-x,y,color=color,alpha=0.9)
+    x = (r*np.cos(theta) + GeoPlotTable['L_RA_app'][ii] -
+         GeoPlotTable['S_RA_app'][ii])
+    y = (r*np.sin(theta) + GeoPlotTable['L_DEC_app'][ii] -
+         GeoPlotTable['S_DEC_app'][ii])
+    ax.plot(-x, y, color=color, alpha=0.9)
 
 ax.set_aspect(1)
 ax.legend(fontsize='x-small')
 ax.set(xlabel='-RA (degrees)', ylabel='DEC (degrees)')
-plt.figtext(0.5,0.005,'RA flipped to match what we see from ground. Angles as Cartesian distances give plotting error', wrap=True, horizontalalignment='center')
-plt.title('Terra & Luna Transit from Mars 2084-11-10 UTC\nSolar Disk centered', fontweight = 'bold')
+plt.figtext(0.5, 0.005,
+            'RA flipped to match convention. Note: angles as Cartesian distances give plotting error',
+            wrap=True, horizontalalignment='center')
+plt.title('Terra & Luna Transit from Mars 2084-11-10 UTC\nSolar Disk centered',
+          fontweight='bold')
 plt.savefig('1.png')
 # plt.show()
 # plt.close()
 
-fig = plt.figure(figsize=(8,6))
+# Plot 2: disks moving across the sky
+fig = plt.figure(figsize=(8, 6))
 ax = fig.add_subplot(111)
-colormap = iter(plt.cm.rainbow(np.linspace(0,1,len(GeoPlotTable))))
+colormap = iter(plt.cm.rainbow(np.linspace(0, 1, len(GeoPlotTable))))
 for ii in range(len(GeoPlotTable)):
-    color=next(colormap)
-    ax.scatter(GeoPlotTable['S_RA_app'][ii],GeoPlotTable['S_DEC_app'][ii], color=color, marker='+')
+    color = next(colormap)
+    ax.scatter(GeoPlotTable['S_RA_app'][ii], GeoPlotTable['S_DEC_app'][ii],
+               color=color, marker='+')
     theta = np.linspace(0, 2*np.pi, 100)
     r = (GeoPlotTable['S_ang_width'][ii]/2)/3600
     x = r*np.cos(theta) + GeoPlotTable['S_RA_app'][ii]
     y = r*np.sin(theta) + GeoPlotTable['S_DEC_app'][ii]
-    ax.plot(x,y,color=color,alpha=0.5, label = GeoPlotTable['Object'][ii] + " "+ GeoPlotTable['Event'][ii] + " "+ zTime[ii])
+    ax.plot(x, y, color=color, alpha=0.5,
+            label=GeoPlotTable['Object'][ii] + " " +
+            GeoPlotTable['Event'][ii] + " " + zTime[ii])
     r = (GeoPlotTable['T_ang_width'][ii]/2)/3600
     x = r*np.cos(theta) + GeoPlotTable['T_RA_app'][ii]
     y = r*np.sin(theta) + GeoPlotTable['T_DEC_app'][ii]
-    ax.plot(x,y,color=color,alpha=0.9)
+    ax.plot(x, y, color=color, alpha=0.9)
     r = (GeoPlotTable['L_ang_width'][ii]/2)/3600
     x = r*np.cos(theta) + GeoPlotTable['L_RA_app'][ii]
     y = r*np.sin(theta) + GeoPlotTable['L_DEC_app'][ii]
-    ax.plot(x,y,color=color,alpha=0.9)
+    ax.plot(x, y, color=color, alpha=0.9)
 
 ax.set_aspect(1)
 ax.legend(fontsize='x-small')
 ax.set(xlabel='RA (degrees)', ylabel='DEC (degrees)')
-plt.figtext(0.5,0.005, 'Angles as Cartesian distances give plotting error', wrap=True, horizontalalignment='center')
-plt.title('Terra & Luna Transit from Mars 2084-11-10 UTC', fontweight = 'bold')
+plt.figtext(0.5, 0.005, 'Note: angles as Cartesian distances give plotting error',
+            wrap=True, horizontalalignment='center')
+plt.title('Terra & Luna Transit from Mars 2084-11-10 UTC', fontweight='bold')
 plt.savefig('2.png')
 # plt.show()
 # plt.close()
