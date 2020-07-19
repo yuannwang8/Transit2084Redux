@@ -117,7 +117,7 @@ def makeSolarDisk(xpdfname, xdrift=True):
         xlabstr = r'$\Delta$'+' RA (degrees)'
         ylabstr = r'$\Delta$'+' DEC (degrees)'
         legendloc = 'lower left'
-        Centre = SkyCoord([0]*len(Sun1), [0]*len(Sun1),
+        Centre = SkyCoord([0]*len(Sun), [0]*len(Sun),
                           frame='icrs', unit='deg')
 
     fig = plt.figure(figsize=(8, 6))
