@@ -1,11 +1,12 @@
+# this module downloads the necessary data from JPL Horizons to make
+# transit timeline plots
+
 from astroquery.jplhorizons import Horizons
 from astropy.table import Table, join
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 # from astropy.coordinates import Angle
 import numpy as np
-
-# https://docs.astropy.org/en/stable/api/astropy.table.Table.html
 
 
 def dl_flats(xtag, idx, locationx, epochsx, quantitiesx):
@@ -53,15 +54,15 @@ def downloadSolarDiskFlat():
     dropcol = [s for s in list(eph.columns) if any(map(s.endswith, dropthese))]
     del eph[dropcol]
     print('writing files')
-    eph.write('ephTSL1.ecsv', format='ascii.ecsv', overwrite=True)
-    eph.write('ephTSL1.csv', format='csv', overwrite=True)
+    eph.write('Data/ephTSL1.ecsv', format='ascii.ecsv', overwrite=True)
+    eph.write('Data/ephTSL1.csv', format='csv', overwrite=True)
     print('download complete')
     return eph
 
 
 def readSolarDiskFlat():
     print('read downloaded files for Overview Disc')
-    return Table.read('ephTSL1.ecsv', format='ascii.ecsv')
+    return Table.read('Data/ephTSL1.ecsv', format='ascii.ecsv')
 
 
 def angular_dist_arcsec(ra1, dec1, ra2, dec2):
@@ -191,8 +192,10 @@ def solar_InEgress(eph, transiting_objects):
     returncol = [s for s in list(ephN.columns) if any(map(s.endswith, xcol))]
     plottable = join(Tout, ephN[returncol])
     print('Writing Event Table')
-    plottable.write('GeocentricPlotTable.ecsv',
+    plottable.write('Data/GeocentricPlotTable.ecsv',
                     format='ascii.ecsv', overwrite=True)
+    plottable.write('Data/GeocentricPlotTable.csv',
+                    format='csv', overwrite=True)
     # return Tout, plottable, ephN[returncol]
     return Tout['Object', 'Event', 'datetime_str'], plottable
 
@@ -205,7 +208,7 @@ eph = readSolarDiskFlat()
 
 # Calculate angular distances between sun and transiting objects
 # eph2 = cal_angdist(eph, ['T','L']) # your own equations
-# use build in from SkyCoord instead
+# or use the build in from SkyCoord instead
 eph2 = eph.copy()
 Solar = SkyCoord(eph['S_RA_app'], eph['S_DEC_app'], frame='icrs', unit='deg')
 Terra = SkyCoord(eph['T_RA_app'], eph['T_DEC_app'], frame='icrs', unit='deg')

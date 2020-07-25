@@ -1,7 +1,11 @@
 .DS_Store
 .venv
 
+*/__pycache__
+
 *.csv
 *.ecsv
 *.png
 zz_old/
+Reference/
+Output/

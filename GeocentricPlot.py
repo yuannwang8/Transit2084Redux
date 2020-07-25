@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 def readEPH():
     '''Load and transform Event Table'''
     print('read Event Table')
-    eph = Table.read('GeocentricPlotTable.ecsv', format='ascii.ecsv')
+    eph = Table.read('Data/GeocentricPlotTable.ecsv', format='ascii.ecsv')
 
     '''
     remove rows starting with Tflag - keep calculated rows only
@@ -211,7 +211,7 @@ def makeWholeSky(xpdfname):
 (eph, zTime, SunR, TerraR, LunaR, Sun1, Terra1,
  Luna1, SMN1, Terra1Off, Luna1Off, SMN1Off) = readEPH()
 
-makeSolarDisk(xpdfname='SolarDiskTravel', xdrift=True)
-makeSolarDisk(xpdfname='SolarDiskCentered', xdrift=False)
+makeSolarDisk(xpdfname='Output/SolarDiskTravel', xdrift=True)
+makeSolarDisk(xpdfname='Output/SolarDiskCentered', xdrift=False)
 
-makeWholeSky(xpdfname='WholeSky')
+makeWholeSky(xpdfname='Output/WholeSky')
