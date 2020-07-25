@@ -192,9 +192,9 @@ def solar_InEgress(eph, transiting_objects):
     returncol = [s for s in list(ephN.columns) if any(map(s.endswith, xcol))]
     plottable = join(Tout, ephN[returncol])
     print('Writing Event Table')
-    plottable.write('Data/GeocentricPlotTable.ecsv',
+    plottable.write('Data/ArescentricPlotTable.ecsv',
                     format='ascii.ecsv', overwrite=True)
-    plottable.write('Data/GeocentricPlotTable.csv',
+    plottable.write('Data/ArescentricPlotTable.csv',
                     format='csv', overwrite=True)
     # return Tout, plottable, ephN[returncol]
     return Tout['Object', 'Event', 'datetime_str'], plottable

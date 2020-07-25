@@ -3,18 +3,16 @@
 from astropy.table import Table
 from astropy.coordinates import SkyCoord, Angle
 import astropy.units as u
-
 import numpy as np
 import matplotlib.pyplot as plt
 
+import T2084Helpers.MarsNAlign as MNA
 
-'''To Do: Coordinate transformation to Mars rotational frame.'''
 
-
-def readEPH():
+def readEPH(useMNA, rused):
     '''Load and transform Event Table'''
     print('read Event Table')
-    eph = Table.read('Data/GeocentricPlotTable.ecsv', format='ascii.ecsv')
+    eph = Table.read('Data/ArescentricPlotTable.ecsv', format='ascii.ecsv')
 
     '''
     remove rows starting with Tflag - keep calculated rows only
@@ -38,12 +36,11 @@ def readEPH():
     LunaR = Angle((eph['L_ang_width']/2))
 
     '''Mars rotational axis & J2000 rotational axis'''
-    Tref = 2451545  # reference JD for '2000-01-01T12:00:00'
-    # print(Tref.jd)
-    MarsRRA = (317.681 - 0.106*(eph['datetime_jd']-Tref)/36525)
-    MarsRDEC = (52.887 - 0.061*(eph['datetime_jd']-Tref)/36525)
-    MarsRRA.unit = u.deg
-    MarsRDEC.unit = u.deg
+    # use MarsRRA and MarsRDEC defined in MNA module
+    MarsRRA = MNA.MarsRRA
+    MarsRDEC = MNA.MarsRDEC
+    # MarsRRA.unit = u.deg
+    # MarsRDEC.unit = u.deg
     MarsR = SkyCoord(MarsRRA, MarsRDEC, frame='icrs', unit='deg')
     # J2000R = SkyCoord([0]*len(eph), [90]*len(eph), frame='icrs', unit='deg')
     # RotSept = J2000R.separation(MarsR).deg * u.deg
@@ -53,36 +50,62 @@ def readEPH():
 
     '''
     Objects in SkyCoords objects:
-    Object1: J2000 frame
-    Object2: Mars rotational frame (WIP)
+    Option to switch between J2000 frame or Mars Rotational Axis aligned frame
     '''
-    Sun1 = SkyCoord(eph['S_RA_app'], eph['S_DEC_app'],
-                    frame='icrs', unit='deg')
-    Terra1 = SkyCoord(eph['T_RA_app'], eph['T_DEC_app'],
-                      frame='icrs', unit='deg')
-    Luna1 = SkyCoord(eph['L_RA_app'], eph['L_DEC_app'],
+    Sun = SkyCoord(eph['S_RA_app'], eph['S_DEC_app'],
+                   frame='icrs', unit='deg')
+    Terra = SkyCoord(eph['T_RA_app'], eph['T_DEC_app'],
                      frame='icrs', unit='deg')
-    # SunJ200RPosAng = Sun1.position_angle(J2000R).deg * u.deg
-    # eph['SunJ200RPosAng'] = SunJ200RPosAng  # as expected! no angle diff
-    SunMarsRPosAng = Sun1.position_angle(MarsR).deg * u.deg
-    eph['SunMarsRPosAng'] = SunMarsRPosAng  # ~36.7
+    Luna = SkyCoord(eph['L_RA_app'], eph['L_DEC_app'],
+                    frame='icrs', unit='deg')
+
+    if useMNA:
+        Sun = Sun.transform_to(MNA.MarsNAlign)
+        Terra = Terra.transform_to(MNA.MarsNAlign)
+        Luna = Luna.transform_to(MNA.MarsNAlign)
+        MarsR = MarsR.transform_to(MNA.MarsNAlign)
 
     '''
     Make small offset by 0.1 degree to point in the direction of Mars North
     '''
-    # SMN1 = Sun1.directional_offset_by(0*u.deg, 0.1*u.deg)  # North!
-    SMN1 = Sun1.directional_offset_by(SunMarsRPosAng, 0.1*u.deg)
-    eph['SMN_RA1'] = SMN1.ra.deg
-    eph['SMN_DEC1'] = SMN1.dec.deg
+    # SunJ200RPosAng = Sun.position_angle(J2000R).deg * u.deg
+    # eph['SunJ200RPosAng'] = SunJ200RPosAng  # as expected! no angle diff
+    SunMarsRPosAng = Sun.position_angle(MarsR).deg * u.deg
+    eph['SunMarsRPosAng'] = SunMarsRPosAng  # ~36.7
+    # SMN = Sun.directional_offset_by(0*u.deg, 0.1*u.deg)  # North!
+    SMN = Sun.directional_offset_by(SunMarsRPosAng, 0.1*u.deg)  # good&weird
 
-    '''Offsets from center of solar disk'''
-    Obj1frame = Sun1.skyoffset_frame()
-    Terra1Off = Terra1.transform_to(Obj1frame)
-    Luna1Off = Luna1.transform_to(Obj1frame)
-    SMN1Off = SMN1.transform_to(Obj1frame)
+    '''
+    Offsets from center of solar disk
+    To add constraints to rused = [0,1,-1 only]
+    '''
+    if useMNA or rused == 0:
+        '''
+        This is for the original J2000 original frame or
+        of the MNA.MarsNAlign transformation is used
+        '''
+        rused = 0
+    elif rused == 1:
+        '''
+        This rotates the offsets
+        Functionlly equivalent to MNA.MarsAlign in the offset-centered plot!!!
+        '''
+        rused = SunMarsRPosAng
+    elif rused == -1:
+        '''
+        This rotates the offsets the otherway... why not?
+        '''
+        rused = -SunMarsRPosAng
+    else:
+        rused = 0
 
-    return (eph, zTime, SunR, TerraR, LunaR, Sun1, Terra1, Luna1, SMN1,
-            Terra1Off, Luna1Off, SMN1Off)
+    Obj1frame = Sun.skyoffset_frame(rused)
+    TerraOff = Terra.transform_to(Obj1frame)
+    LunaOff = Luna.transform_to(Obj1frame)
+    SMNOff = SMN.transform_to(Obj1frame)
+
+    return (eph, zTime, SunR, TerraR, LunaR, Sun, Terra, Luna, SMN,
+            TerraOff, LunaOff, SMNOff)
 
 
 def plotDisks(r, ra, dec):
@@ -92,30 +115,33 @@ def plotDisks(r, ra, dec):
     return x, y
 
 
-def makeSolarDisk(xpdfname, xdrift=True):
-    '''Transit across the solar disk'''
-
+def makeSolarDisk(xpdfname, xdrift=True, useMNA=True):
     '''
-    Options for coordinate frames: only J2000 (1) for now
-    '''
-    Sun = Sun1
-    TerraOff = Terra1Off
-    LunaOff = Luna1Off
-    SMNOff = SMN1Off
-
-    '''
+    Transit across the solar disk
     Options for plots
     '''
+    # update labelling options
+    if useMNA:
+        xtag = ("Note: Frame aligned to Mars' rotational axis. +--" +
+                r'$\Delta$'+" points to Mars' north")
+        xlabtag = 'Lon (degrees)'
+        ylabtag = 'Lat (degrees)'
+    else:
+        xtag = ('Note: In J2000 frame. +--' + r'$\Delta$'
+                " points to Mars' north")
+        xlabtag = 'RA (degrees)'
+        ylabtag = 'DEC (degrees)'
+
     if xdrift:
         xtitleappend = '\nSolar disk moves across the sky'
-        xlabstr = 'RA (degrees)'
-        ylabstr = 'DEC (degrees)'
+        xlabstr = xlabtag
+        ylabstr = ylabtag
         legendloc = 'upper right'
         Centre = Sun
     else:
         xtitleappend = '\nSolar disk centered'
-        xlabstr = r'$\Delta$'+' RA (degrees)'
-        ylabstr = r'$\Delta$'+' DEC (degrees)'
+        xlabstr = r'$\Delta$'+' '+xlabtag
+        ylabstr = r'$\Delta$'+' '+ylabtag
         legendloc = 'lower left'
         Centre = SkyCoord([0]*len(Sun), [0]*len(Sun),
                           frame='icrs', unit='deg')
@@ -150,29 +176,29 @@ def makeSolarDisk(xpdfname, xdrift=True):
     ax.legend(fontsize='x-small', loc=legendloc)
     ax.invert_xaxis()
     ax.set(xlabel=xlabstr, ylabel=ylabstr)
-    plt.figtext(0.5, 0.005,
-                ('Note: In J2000 frame. +--' + r'$\Delta$'
-                 " points to Mars' north (rotational axis)"),
-                wrap=True, horizontalalignment='center')
+    # if xdrift:  # this doesn't work
+    #     overlay = ax.get_coords_overlay('icrs')
+    #     overlay.grid(color='blue', ls='dotted')
+    #     overlay[0].set_axislabel('RA-like')
+    #     overlay[1].set_axislabel('DEC-like')
+    plt.figtext(0.5, 0.005, xtag, wrap=True, horizontalalignment='center')
     plt.title('Terra & Luna Transit from Mars 2084-11-10 UTC' + xtitleappend)
 
     plt.savefig(xpdfname + '.pdf')
     print(xpdfname + '.pdf saved')
 
 
-def makeWholeSky(xpdfname):
+def makeWholeSky(xpdfname, useMNA):
     ''' whole sky view for the transit events '''
-
-    '''
-    Options for sets: only 1 for now
-    '''
-    Sun = Sun1
-    Terra = Terra1
-    Luna = Luna1
-    SMN = SMN1
 
     fig = plt.figure(figsize=(8, 6))
     ax = fig.add_subplot(111, projection='mollweide')
+    # update labelling options
+    if useMNA:
+        xtag = 'Note: whole sky view. In rotated J2000 frame'
+    else:
+        xtag = 'Note: whole sky view. In J2000 frame'
+
     # each event gets its own colour
     colormap = iter(plt.cm.rainbow(np.linspace(0, 1, len(eph))))
     for ii in range(len(eph)):
@@ -199,8 +225,7 @@ def makeWholeSky(xpdfname):
 
     ax.legend(fontsize='x-small', loc='upper right')
     ax.grid(True)
-    plt.figtext(0.5, 0.15, 'Note: whole sky view. In J2000 frame',
-                wrap=True, horizontalalignment='center')
+    plt.figtext(0.5, 0.15, xtag, wrap=True, horizontalalignment='center')
     plt.title('Terra & Luna Transit from Mars 2084-11-10 UTC',
               fontweight='bold')
 
@@ -208,10 +233,27 @@ def makeWholeSky(xpdfname):
     print(xpdfname + '.pdf saved')
 
 
-(eph, zTime, SunR, TerraR, LunaR, Sun1, Terra1,
- Luna1, SMN1, Terra1Off, Luna1Off, SMN1Off) = readEPH()
+(eph, zTime, SunR, TerraR, LunaR, Sun, Terra,
+ Luna, SMN, TerraOff, LunaOff, SMNOff) = readEPH(useMNA=False, rused=0)
+makeSolarDisk(xpdfname='Output/SolarTravel', xdrift=True, useMNA=False)
+makeSolarDisk(xpdfname='Output/SolarOffset', xdrift=False, useMNA=False)
+makeWholeSky(xpdfname='Output/WholeSky', useMNA=False)
 
-makeSolarDisk(xpdfname='Output/SolarDiskTravel', xdrift=True)
-makeSolarDisk(xpdfname='Output/SolarDiskCentered', xdrift=False)
+# use with MNA.MarsNAlign
+(eph, zTime, SunR, TerraR, LunaR, Sun, Terra,
+ Luna, SMN, TerraOff, LunaOff, SMNOff) = readEPH(useMNA=True, rused=0)
+makeSolarDisk(xpdfname='Output/SolarTravelA', xdrift=True, useMNA=True)
+makeSolarDisk(xpdfname='Output/SolarOffsetA', xdrift=False, useMNA=True)
+makeWholeSky(xpdfname='Output/WholeSkyA', useMNA=True)
 
-makeWholeSky(xpdfname='Output/WholeSky')
+# use skyframe offset 1
+(eph, zTime, SunR, TerraR, LunaR, Sun, Terra,
+ Luna, SMN, TerraOff, LunaOff, SMNOff) = readEPH(useMNA=False, rused=1)
+makeSolarDisk(xpdfname='Output/SolarTravel2', xdrift=True, useMNA=True)
+makeSolarDisk(xpdfname='Output/SolarOffset2', xdrift=False, useMNA=True)
+
+# use skyframe offset -1
+(eph, zTime, SunR, TerraR, LunaR, Sun, Terra,
+ Luna, SMN, TerraOff, LunaOff, SMNOff) = readEPH(useMNA=False, rused=-1)
+makeSolarDisk(xpdfname='Output/SolarTravel3', xdrift=True, useMNA=True)
+makeSolarDisk(xpdfname='Output/SolarOffset3', xdrift=False, useMNA=True)

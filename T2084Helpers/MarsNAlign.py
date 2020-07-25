@@ -73,7 +73,7 @@ def makeRotationMatrix(carA, carB):
     # Amod = np.sqrt(sum(np.square(A)))
     # Bmod = np.sqrt(sum(np.square(B)))
 
-    # find angle theta
+    # find angle theta: the right hand anti-clockwise angle rotated
     # sintheta = kmod/(Amod*Bmod)
     sintheta = cark.norm()/(carA.norm()*carB.norm())
     theta = np.arcsin(sintheta)
@@ -82,18 +82,26 @@ def makeRotationMatrix(carA, carB):
     # khat = k/(Amod*Bmod*sintheta)
     khat = cark/cark.norm()
 
-    # create the cross product matrix for unit kector k
+    # create the cross product matrix for unit kector k - RHS
     # K = np.array([[0, -khat[2], khat[1]],
     #              [khat[2], 0, -khat[0]],
     #              [-khat[1], khat[0], 0]])
+    # right hand rule
     K = np.array([[0, -khat.z, khat.y],
                   [khat.z, 0, -khat.x],
                   [-khat.y, khat.x, 0]])
+    # left hand rule testing
+    # K = np.array([[0, khat.z, -khat.y],
+    #               [khat.z, 0, -khat.x],
+    #               [-khat.y, khat.x, 0]])
 
     # create 3x3 rotational matrix R using Rodrigues' rotation formula
     Iden = np.identity(3)
     K2 = np.matmul(K, K)
+    # right hand rule
     R = Iden + sintheta*K + (1-np.cos(theta))*K2
+    # left hand rule testing
+    # R = Iden + np.sin(-theta)*K + (1-np.cos(-theta))*K2
     # print('The rotational matrix to rotate cartesian vector A to B is')
     # print(R)
     return R
@@ -131,15 +139,15 @@ class MarsNAlign(coord.BaseCoordinateFrame):
     To fix this, an additional perimeter for the longitude needs
     to be addressed.
     Parameters:
-    longitude-like angle
-    latitude-like angle
+    longitude-like angle using ra-like as label to maintain consistency
+    latitude-like angle using dec-like label to maintain consistency
     '''
     default_representation = UnitSphericalRepresentation
 
     frame_specific_representation_info = {
         UnitSphericalRepresentation: [
-            coord.RepresentationMapping('lon', 'lon'),
-            coord.RepresentationMapping('lat', 'lat')]
+            coord.RepresentationMapping('lon', 'ra'),  # ('lon', 'lon')
+            coord.RepresentationMapping('lat', 'dec')]  # ('lon', 'lon')
     }
 
 

@@ -1,5 +1,5 @@
 # run this as a module from the main working directory
-# python3 -m Check.check_MarsNAlign
+# python3 -m Check.checkMarsNAlign
 
 import astropy.units as u
 import astropy.coordinates as coord
@@ -50,7 +50,7 @@ print('Aligning vectors in J2000 frame to Mars North Pole frame\n')
 print(C7)
 print(C8)
 
-if round(C8[0].lat.deg, 3) == 90:
+if round(C8[0].dec.deg, 3) == 90:
     print('\nMars rotation axis in J2000 points northwards to 90\n')
 else:
     print('\nCheck MarsNAlign frame\n')
