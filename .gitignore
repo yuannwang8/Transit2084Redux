@@ -7,5 +7,6 @@
 *.ecsv
 *.png
 zz_old/
-Reference/
+reference/
 Output/
+Data/
