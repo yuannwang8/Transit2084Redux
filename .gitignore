@@ -3,9 +3,9 @@
 
 */__pycache__
 
-*.csv
-*.ecsv
-*.png
+# *.csv
+# *.ecsv
+*.numbers
 zz_old/
 reference/
 Output/
