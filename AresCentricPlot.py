@@ -8,6 +8,14 @@ import matplotlib.pyplot as plt
 
 import T2084Helpers.MarsNAlign as MNA
 
+'''
+Purpose: This file plots the relative positions of the Earth and the Moon as
+they transit across the Solar Disk.
+Commentary: The direction of Mars's north (rotational axis) looks odd
+when considering Earth's orbital plane.
+To do: To consider plotting the invariant plane for further clarity.
+'''
+
 
 def readEPH(useMNA, rused):
     '''Load and transform Event Table'''
@@ -76,7 +84,7 @@ def readEPH(useMNA, rused):
     SMN = Sun.directional_offset_by(SunMarsRPosAng, 0.1*u.deg)  # good&weird
 
     '''
-    Offsets from center of solar disk
+    Position angle offsets from center of solar disk
     To add constraints to rused = [0,1,-1 only]
     '''
     if useMNA or rused == 0:
@@ -87,16 +95,20 @@ def readEPH(useMNA, rused):
         rused = 0
     elif rused == 1:
         '''
-        This rotates the offsets
-        Functionlly equivalent to MNA.MarsAlign in the offset-centered plot!!!
+        This rotates the offsets.
+        When using the J2000 frame, this is functionlly equivalent to
+        MNA.MarsAlign without a position angle offset.
         '''
         rused = SunMarsRPosAng
     elif rused == -1:
         '''
-        This rotates the offsets the otherway... why not?
+        This rotates the offsets the otherway... This is not very logical but
+        exists as an option for future considerations.
         '''
         rused = -SunMarsRPosAng
     else:
+        print('Your selected option for angle offset is not [0, 1, -1].' +
+              'Defaulting to 0')
         rused = 0
 
     Obj1frame = Sun.skyoffset_frame(rused)
@@ -115,13 +127,13 @@ def plotDisks(r, ra, dec):
     return x, y
 
 
-def makeSolarDisk(xpdfname, xdrift=True, useMNA=True):
+def makeSolarDisk(xpdfname, xdrift=True, useMNAl=True):
     '''
     Transit across the solar disk
     Options for plots
     '''
     # update labelling options
-    if useMNA:
+    if useMNAl:
         xtag = ("Note: Frame aligned to Mars' rotational axis. +--" +
                 r'$\Delta$'+" points to Mars' north")
         xlabtag = 'Lon (degrees)'
@@ -188,13 +200,13 @@ def makeSolarDisk(xpdfname, xdrift=True, useMNA=True):
     print(xpdfname + '.pdf saved')
 
 
-def makeWholeSky(xpdfname, useMNA):
+def makeWholeSky(xpdfname, useMNAl):
     ''' whole sky view for the transit events '''
 
     fig = plt.figure(figsize=(8, 6))
     ax = fig.add_subplot(111, projection='mollweide')
     # update labelling options
-    if useMNA:
+    if useMNAl:
         xtag = 'Note: whole sky view. In rotated J2000 frame'
     else:
         xtag = 'Note: whole sky view. In J2000 frame'
@@ -235,25 +247,25 @@ def makeWholeSky(xpdfname, useMNA):
 
 (eph, zTime, SunR, TerraR, LunaR, Sun, Terra,
  Luna, SMN, TerraOff, LunaOff, SMNOff) = readEPH(useMNA=False, rused=0)
-makeSolarDisk(xpdfname='Output/SolarTravel', xdrift=True, useMNA=False)
-makeSolarDisk(xpdfname='Output/SolarOffset', xdrift=False, useMNA=False)
-makeWholeSky(xpdfname='Output/WholeSky', useMNA=False)
+makeSolarDisk(xpdfname='Output/SolarTravelJ2000', xdrift=True, useMNAl=False)
+makeSolarDisk(xpdfname='Output/SolarOffsetJ2000', xdrift=False, useMNAl=False)
+makeWholeSky(xpdfname='Output/WholeSkyJ2000', useMNAl=False)
 
 # use with MNA.MarsNAlign
 (eph, zTime, SunR, TerraR, LunaR, Sun, Terra,
  Luna, SMN, TerraOff, LunaOff, SMNOff) = readEPH(useMNA=True, rused=0)
-makeSolarDisk(xpdfname='Output/SolarTravelA', xdrift=True, useMNA=True)
-makeSolarDisk(xpdfname='Output/SolarOffsetA', xdrift=False, useMNA=True)
-makeWholeSky(xpdfname='Output/WholeSkyA', useMNA=True)
+makeSolarDisk(xpdfname='Output/SolarTravelMarsN', xdrift=True, useMNAl=True)
+makeSolarDisk(xpdfname='Output/SolarOffsetMarsN', xdrift=False, useMNAl=True)
+makeWholeSky(xpdfname='Output/WholeSkyMars', useMNAl=True)
 
-# use skyframe offset 1
+# use skyframe offset 1: only the offset chart makes sense!
 (eph, zTime, SunR, TerraR, LunaR, Sun, Terra,
  Luna, SMN, TerraOff, LunaOff, SMNOff) = readEPH(useMNA=False, rused=1)
-makeSolarDisk(xpdfname='Output/SolarTravel2', xdrift=True, useMNA=True)
-makeSolarDisk(xpdfname='Output/SolarOffset2', xdrift=False, useMNA=True)
+# makeSolarDisk(xpdfname='Output/SolarTravel2', xdrift=True, useMNAl=True)
+makeSolarDisk(xpdfname='Output/SolarOffset2', xdrift=False, useMNAl=True)
 
-# use skyframe offset -1
+# use skyframe offset -1: this option is here for curiosity purposes only.
 (eph, zTime, SunR, TerraR, LunaR, Sun, Terra,
  Luna, SMN, TerraOff, LunaOff, SMNOff) = readEPH(useMNA=False, rused=-1)
-makeSolarDisk(xpdfname='Output/SolarTravel3', xdrift=True, useMNA=True)
-makeSolarDisk(xpdfname='Output/SolarOffset3', xdrift=False, useMNA=True)
+# makeSolarDisk(xpdfname='Output/SolarTravel3', xdrift=True, useMNAl=True)
+makeSolarDisk(xpdfname='Output/SolarOffset3', xdrift=False, useMNAl=True)
