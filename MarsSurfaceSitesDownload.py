@@ -112,16 +112,18 @@ def makeEventTable(sitename, eph, transiting_objects):
     tB = []
     tC = []
     tD = []
-    # Terra Direct Masking by way of T_sat_vis = t
-    # mask = ephN['T_sat_vis'] == 't'
-    # tA.append('T')
-    # tB.append('Tflag_start')
-    # tC.append(ephN['datetime_str'][mask][0])
-    # tD.append(ephN['datetime_jd'][mask][0])
-    # tA.append('T')
-    # tB.append('Tflag_end')
-    # tC.append(ephN['datetime_str'][mask][len(ephN[mask])-1])
-    # tD.append(ephN['datetime_jd'][mask][len(ephN[mask])-1])
+    # sunrise by way of S_solar_presence = *
+    mask = ephN['S_solar_presence'] == '*'
+    if any(mask):
+        tA.append('S')
+        tB.append('sun_visible')
+        tC.append(ephN['datetime_str'][mask][0])
+        tD.append(ephN['datetime_jd'][mask][0])
+        tA.append('S')
+        tB.append('sun_notvisible')
+        tC.append(ephN['datetime_str'][mask][len(ephN[mask])-1])
+        tD.append(ephN['datetime_jd'][mask][len(ephN[mask])-1])
+        ephN = eph.copy()
     mask = ephN['PS_angsep'] == np.min(ephN['PS_angsep'])
     tA.append('P')
     tB.append('Min_Angsep')
@@ -230,6 +232,7 @@ def dlAll(sites):
             print(loc)
         eph = downloadGroundView(Site, loc)
         PT = makeEventTable(Site, eph, ['T', 'L'])
+        # print(PT)
         BigTable = vstack([BigTable, PT])
     BigTable.write('Data/AresSurfaceEventTable.ecsv',
                    format='ascii.ecsv', overwrite=True)
