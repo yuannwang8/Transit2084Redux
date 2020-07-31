@@ -61,6 +61,7 @@ H InSight,HInSight,,-135.623447,4.502384,-3,"H: Landing site. Mars24 programme. 
 H Mars 6,HMars6,,-19.42,-23.9,2,"H: Crash site. Mars24 programme.  Altitude data, where not provided, are estimated from MOLA imagery"
 H Perseverance,HPerseverance,,-77.42980,18.670633,-2.64,"H: Planned landing sites. Mars24 programme. Altitude data, where not provided, are estimated from MOLA imagery"
 H Polar Lander,HPolarLander,,-165,-76.1,0,"H: Crash site. Mars24 programme. Altitude data, where not provided, are estimated from MOLA imagery"
+H Tianwen1,HTianwen1,,-110.318,24.748,-4,H: Planned landing site.  Altitude data estimated from MOLA imagery
 SpX Deuteronilus Mensae,SpXDeuteronilusMensae,,-22.6,43.6,-3.5,SpaceX proposed landing sites. Altitude estimated from MOLA imagery
 SpX Utopia Planitia,SpXUtopiaPlanitia,,-118,49.7,-5,SpaceX proposed landing sites. Altitude estimated from MOLA imagery
 SpX Arcadia Planitia 1,SpXArcadiaPlanitia1,,-189.790,39.09,-4,HiRise imagery ESP_060706_2195. Altitude estimated from MOLA imagery
