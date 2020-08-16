@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import T2084Helpers.MarsNAlign as MNA
+import T2084Helpers.misc as misc
 
 '''
 Purpose: This file plots the relative positions of the Earth and the Moon as
@@ -193,11 +194,14 @@ def makeSolarDisk(xpdfname, xdrift=True, useMNAl=True):
     #     overlay.grid(color='blue', ls='dotted')
     #     overlay[0].set_axislabel('RA-like')
     #     overlay[1].set_axislabel('DEC-like')
-    plt.figtext(0.5, 0.005, xtag, wrap=True, horizontalalignment='center')
+    plt.figtext(0.5, 0.025, xtag, wrap=True, horizontalalignment='center')
+    plt.figtext(0.5, 0.01, misc.xfooter, size=6,
+                horizontalalignment='center')
     plt.title('Terra & Luna Transit from Mars 2084-11-10 UTC' + xtitleappend)
 
     plt.savefig(xpdfname + '.pdf')
     print(xpdfname + '.pdf saved')
+    plt.close()
 
 
 def makeWholeSky(xpdfname, useMNAl):
@@ -238,11 +242,14 @@ def makeWholeSky(xpdfname, useMNAl):
     ax.legend(fontsize='x-small', loc='upper right')
     ax.grid(True)
     plt.figtext(0.5, 0.15, xtag, wrap=True, horizontalalignment='center')
+    plt.figtext(0.5, 0.1, misc.xfooter, size=6,
+                horizontalalignment='center')
     plt.title('Terra & Luna Transit from Mars 2084-11-10 UTC',
               fontweight='bold')
 
     plt.savefig(xpdfname+'.pdf')
     print(xpdfname + '.pdf saved')
+    plt.close()
 
 
 (eph, zTime, SunR, TerraR, LunaR, Sun, Terra,
@@ -267,5 +274,5 @@ makeSolarDisk(xpdfname='Output/SolarOffset2', xdrift=False, useMNAl=True)
 # use skyframe offset -1: this option is here for curiosity purposes only.
 (eph, zTime, SunR, TerraR, LunaR, Sun, Terra,
  Luna, SMN, TerraOff, LunaOff, SMNOff) = readEPH(useMNA=False, rused=-1)
-# makeSolarDisk(xpdfname='Output/SolarTravel3', xdrift=True, useMNAl=True)
-makeSolarDisk(xpdfname='Output/SolarOffset3', xdrift=False, useMNAl=True)
+# makeSolarDisk(xpdfname='Output/SolarTravel3wrong', xdrift=True, useMNAl=True)
+makeSolarDisk(xpdfname='Output/SolarOffset3wrong', xdrift=False, useMNAl=True)

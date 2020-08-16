@@ -6,6 +6,8 @@ import astropy.units as u
 import numpy as np
 import matplotlib.pyplot as plt
 
+import T2084Helpers.misc as misc
+
 
 def surfaceVisibility():
     '''
@@ -36,8 +38,8 @@ def surfaceVisibility():
         # Is the Sun visible during the transit time frame?
         if 'S' in grp['Object']:
             TB.append('Visible')
-            SunRise = grp[grp['Event'] == 'sun_visible']['datetime_jd'][0]
-            SunSet = grp[grp['Event'] == 'sun_notvisible']['datetime_jd'][0]
+            SunRise = grp[grp['Event'] == 'sunrise']['datetime_jd'][0]
+            SunSet = grp[grp['Event'] == 'sunset']['datetime_jd'][0]
 
             # Terra event options
             if SunRise >= TerraOut:  # sun rises after transit ends
@@ -164,12 +166,15 @@ def makeSurfaceViz(xpdfname, SrfEvts, SrfLongLat):
                 'visible in full from object rise till set\n' +
                 'Marker colour indicates duration of twin transit in hours',
                 wrap=True, horizontalalignment='center')
+    plt.figtext(0.5, 0.1, misc.xfooter, size=6,
+                horizontalalignment='center')
     plt.title('Preferred Viewing Locations on Mars ' +
               'for Earth & Moon Transit 2018-11-10')
     plt.colorbar(im, orientation='horizontal', shrink=0.5)
 
     plt.savefig(xpdfname+'.pdf')
     print(xpdfname + '.pdf saved')
+    plt.close()
 
 
 # print('read Event Table')

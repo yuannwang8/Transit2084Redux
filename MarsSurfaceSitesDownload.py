@@ -116,11 +116,11 @@ def makeEventTable(sitename, eph, transiting_objects):
     mask = ephN['S_solar_presence'] == '*'
     if any(mask):
         tA.append('S')
-        tB.append('sun_visible')
+        tB.append('sunrise')
         tC.append(ephN['datetime_str'][mask][0])
         tD.append(ephN['datetime_jd'][mask][0])
         tA.append('S')
-        tB.append('sun_notvisible')
+        tB.append('sunset')
         tC.append(ephN['datetime_str'][mask][len(ephN[mask])-1])
         tD.append(ephN['datetime_jd'][mask][len(ephN[mask])-1])
         ephN = eph.copy()
