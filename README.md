@@ -7,4 +7,4 @@ Data courtesy of [NASA/JPL/HORIZONS](https://ssd.jpl.nasa.gov/?horizons).
 This is the second attempt at this project: it improves upon the [attempt made in 2017](https://yuannwang8.github.io/Transit2084Mars/). Improvements so far:
 
 * Now using the [`astropy`](https://www.astropy.org) package for common astrophysics tools to improve on calculation accuracies.
-* Now using the [`astroquery`](https://astroquery.readthedocs.io/en/latest/) package to access the Horizons database. The list of interesting surface sites is curated in `MarsSurfaceSites.csv`.
+* Now using the [`astroquery`](https://astroquery.readthedocs.io/en/latest/) package to access the Horizons database. The list of interesting surface sites is curated in `MarsSurfaceSites.csv`.  Elevation details, where not provided, are estimated from [MOLA](https://attic.gsfc.nasa.gov/mola/images.html) imagery.

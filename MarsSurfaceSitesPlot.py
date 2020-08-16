@@ -6,25 +6,14 @@ import astropy.units as u
 import numpy as np
 import matplotlib.pyplot as plt
 
-# print('read Event Table')
-surf = Table.read('Data/AresSurfaceEventTable.ecsv', format='ascii.ecsv')
-# surf.pprint_all()
-surf = surf.group_by('site')
-
-# print(surf.groups.keys)
-# surf.groups[0]
-# surf1 = surf.groups[0]
-# len(surf1)
-# # surf1.add_index('Object')
-# # surf1.loc['T']
-# b1 = surf1['Object'] == 'T'
-# b2 = surf1['Event'] == 'Outer_Ingress'
-# surf2 = surf1[b1 & b2]
-# surf2['datetime_jd']
-# surf1[surf1['Event'] == 'sun_visible']['datetime_jd'][0]
-
 
 def surfaceVisibility():
+    '''
+    Identifty key events per surface site surveyed
+    For the sun: the following events are recorded: sunrise, sunset
+    For Earth and the Moon, the following states of transits are recorded:
+    Full Viz, Rises during Transit, Sets during Transit, Zero Viz
+    '''
     TA = []
     TB = []
     TC = []
@@ -42,9 +31,6 @@ def surfaceVisibility():
         LunaIn = grp[blL & blOutIng]['datetime_jd'][0]
         LunaOut = grp[blL & blOutEg]['datetime_jd'][0]
 
-        # Site
-        # Event Duration TC : to calculate
-        # Event Type per Body: to calculate
         # Full Viz, Rises during Transit, Sets during Transit, Zero Viz
         TA.append(key[0])
         # Is the Sun visible during the transit time frame?
@@ -174,7 +160,7 @@ def makeSurfaceViz(xpdfname, SrfEvts, SrfLongLat):
     ax.set_xticklabels(['30°', '60°', '90°', '120°', '150°', '180°',
                         '210°', '240°', '270°', '300°', '330°'])
     plt.figtext(0.5, 0.25,
-                'Red labels indicate locations where twin transits are' +
+                'Red labels indicate locations where twin transits are ' +
                 'visible in full from object rise till set\n' +
                 'Marker colour indicates duration of twin transit in hours',
                 wrap=True, horizontalalignment='center')
@@ -185,6 +171,11 @@ def makeSurfaceViz(xpdfname, SrfEvts, SrfLongLat):
     plt.savefig(xpdfname+'.pdf')
     print(xpdfname + '.pdf saved')
 
+
+# print('read Event Table')
+surf = Table.read('Data/AresSurfaceEventTable.ecsv', format='ascii.ecsv')
+# surf.pprint_all()
+surf = surf.group_by('site')
 
 SrfEvts, SrfLongLat = surfaceVisibility()
 makeSurfaceViz('Output/SurfaceTransitVisibility', SrfEvts, SrfLongLat)
