@@ -216,7 +216,7 @@ def makeWholeSky(xpdfname, useMNAl):
         xtag = 'Note: whole sky view. In J2000 frame'
 
     # each event gets its own colour
-    colormap = iter(plt.cm.rainbow(np.linspace(0, 1, len(eph))))
+    colormap = iter(plt.cm.plasma(np.linspace(0, 1, len(eph))))
     for ii in range(len(eph)):
         color = next(colormap)
         x = Sun[ii].ra.wrap_at(180*u.deg).rad

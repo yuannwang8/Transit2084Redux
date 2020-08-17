@@ -128,13 +128,13 @@ def makeSolarDisk(ax, sitename, locale, eph, zTime, SolR, TerraR, LunaR,
         for ii in range(len(eph)):
             color = next(colormap)
             ax.scatter(Centre[ii].ra.deg, Centre[ii].dec.deg,
-                       color=color, marker='+',
+                       color=color, alpha=0.9, marker='+',
                        label=eph['Object'][ii] + " " +
                        eph['Event'][ii] + " " + zTime[ii])
             x, y = plotDisks(r=SolR.deg[ii],
                              ra=Centre[ii].ra.deg,
                              dec=Centre[ii].dec.deg)
-            ax.plot(x, y, color=color, alpha=0.7)
+            ax.plot(x, y, color=color, alpha=0.3)
             x, y = plotDisks(r=TerraR.deg[ii],
                              ra=TerraOff[ii].lon.deg + Centre[ii].ra.deg,
                              dec=TerraOff[ii].lat.deg + Centre[ii].dec.deg)
@@ -146,7 +146,7 @@ def makeSolarDisk(ax, sitename, locale, eph, zTime, SolR, TerraR, LunaR,
             if not xdrift:
                 x = SMNOff[ii].lon.deg + Centre[ii].ra.deg
                 y = SMNOff[ii].lat.deg + Centre[ii].dec.deg
-                ax.scatter(x, y, color=color, alpha=0.9, marker=10)
+                ax.scatter(x, y, color=color, alpha=0.3, marker=10)
 
         ax.set_aspect(1)
         ax.legend(fontsize='x-small', loc=legendloc)
@@ -168,15 +168,16 @@ def makeSolarDisk(ax, sitename, locale, eph, zTime, SolR, TerraR, LunaR,
         return ax
 
 
-def makeWholeSky(ax, sitename, locale, eph, zTime, SolR, TerraR, LunaR, Sol,
-                 Terra, Luna):
+def makeWholeSky(ax, sitename, locale, eph, zTime, Sol):
     '''
     Whole sky view for the transit events
     Looks south - this requires the (angle.ra.deg - 180) as a wrap-around
+    Plot only center of solar disk:
+    the disks themselves are too small to be seen!
     '''
 
     # each event gets its own colour
-    colormap = iter(plt.cm.rainbow(np.linspace(0, 1, len(eph))))
+    colormap = iter(plt.cm.plasma(np.linspace(0, 1, len(eph))))
     for ii in range(len(eph)):
         color = next(colormap)
         # x = Sol[ii].ra.wrap_at(180*u.deg).rad
@@ -184,21 +185,6 @@ def makeWholeSky(ax, sitename, locale, eph, zTime, SolR, TerraR, LunaR, Sol,
         y = Sol[ii].dec.rad
         ax.scatter(x, y, color=color, marker='+', label=eph['Object'][ii] +
                    " " + eph['Event'][ii] + " " + zTime[ii])
-        x, y = plotDisks(r=SolR.rad[ii],
-                         # ra=Sol[ii].ra.wrap_at(180*u.deg).rad,
-                         ra=Angle((Sol[ii].ra.deg-180)*u.deg).wrap_at(180*u.deg).rad,
-                         dec=Sol[ii].dec.rad)
-        ax.plot(x, y, color=color, alpha=0.5)
-        x, y = plotDisks(r=TerraR.rad[ii],
-                         # ra=Terra[ii].ra.wrap_at(180*u.deg).rad,
-                         ra=Angle((Terra[ii].ra.deg-180)*u.deg).wrap_at(180*u.deg).rad,
-                         dec=Terra[ii].dec.rad)
-        ax.plot(x, y, color=color, alpha=0.9)
-        x, y = plotDisks(r=LunaR.rad[ii],
-                         # ra=Luna[ii].ra.wrap_at(180*u.deg).rad,
-                         ra=Angle((Luna[ii].ra.deg-180)*u.deg).wrap_at(180*u.deg).rad,
-                         dec=Luna[ii].dec.rad)
-        ax.plot(x, y, color=color, alpha=0.9)
 
     ax.legend(fontsize='x-small', loc='best')  # 'lower center'
     ax.grid(True)
@@ -229,8 +215,7 @@ def siteCentricPlot(surfViz):
                             LunaR, Sol, TerraOff, LunaOff, SMNOff,
                             xdrift=False)
 
-        ax2 = makeWholeSky(ax2, site, locale, eph, zTime, SolR, TerraR, LunaR,
-                           Sol, Terra, Luna)
+        ax2 = makeWholeSky(ax2, site, locale, eph, zTime, Sol)
 
         # plt.tight_layout()
         plt.suptitle('Terra & Luna Transit from Mars 2084-11-10 UTC at ' +

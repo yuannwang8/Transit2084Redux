@@ -179,6 +179,8 @@ def makeSurfaceViz(xpdfname, SrfEvts, SrfLongLat):
 
 # print('read Event Table')
 surf = Table.read('Data/AresSurfaceEventTable.ecsv', format='ascii.ecsv')
+mask = surf['site'] == 'EZ22EZ40GaleCrater'
+surf = surf[np.logical_not(mask)]
 # surf.pprint_all()
 surf = surf.group_by('site')
 

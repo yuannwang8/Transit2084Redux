@@ -1,3 +1,3 @@
 # misc
 
-xfooter = 'NASA/JPL/HORIZONS/Yu-AnnWang'
+xfooter = 'NASA/JPL/HORIZONS/Wang,Y'
