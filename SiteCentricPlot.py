@@ -11,11 +11,12 @@ import T2084Helpers.misc as misc
 '''
 Purpose: This file plots the relative positions of the Earth and the Moon as
 they transit across the Solar Disk.
-Yep, the AltAz frame rotation is weird and may need reconsidering.
+To do:
+0. double check plot for HMars3
 '''
 
 
-def readEPH(sitename):
+def readEPH(sitename, latN):
     '''Load and transform Event Table'''
     eph = Table.read('Data/G/'+sitename+'ETable.ecsv', format='ascii.ecsv')
 
@@ -29,7 +30,7 @@ def readEPH(sitename):
     eph.remove_rows(ijk)
 
     '''
-    Remove sunrise and sunset rows if the occur before T-Ingress and
+    Remove sunrise and sunset rows if they occur before T-Ingress and
     after L-Egress
     '''
     if eph['Object'][0].startswith('S'):
@@ -50,8 +51,8 @@ def readEPH(sitename):
     LunaR = Angle((eph['L_ang_width']/2))
 
     '''
-    Objects in SkyCoords objects
-    (Can't do offset in altaz, it seems...) It really should be altaz instead
+    Objects in SkyCoords frame.
+    (Can't do offset in altaz, it seems...) icrs really should be altaz instead
     '''
     Sol = SkyCoord(eph['S_AZ'], eph['S_EL'], frame='icrs', unit='deg')
     Terra = SkyCoord(eph['T_AZ'], eph['T_EL'], frame='icrs', unit='deg')
@@ -62,11 +63,12 @@ def readEPH(sitename):
     '''
     Make small offset by 0.1 degree to point in the direction of Mars North
     '''
-    MarsN = SkyCoord([0]*len(eph), [0]*len(eph), frame='icrs', unit='deg')
+    MarsN = SkyCoord([0]*len(eph), [latN]*len(eph), frame='icrs', unit='deg')
     MarsNPoint = Sol.position_angle(MarsN).deg * u.deg
-    SMN = Sol.directional_offset_by(MarsNPoint, 0.1*u.deg)  # literally 0.1N
+    SMN = Sol.directional_offset_by(MarsNPoint, 0.05*u.deg)
 
     Obj1frame = Sol.skyoffset_frame(MarsNPoint)
+    # Obj1frame = Sol.skyoffset_frame()
     TerraOff = Terra.transform_to(Obj1frame)
     LunaOff = Luna.transform_to(Obj1frame)
     SMNOff = SMN.transform_to(Obj1frame)
@@ -85,8 +87,9 @@ def plotDisks(r, ra, dec):
 def makeSolarDisk(ax, sitename, locale, eph, zTime, SolR, TerraR, LunaR,
                   Sol, TerraOff, LunaOff, SMNOff, xdrift=True):
     '''
-    subset observations to those between sunrise and sunset only
-    if no observations, return an empty box
+    events as they occur across the solar disk
+    subset events to those between sunrise and sunset only
+    if no events, return an empty box
     '''
     mask = eph['S_solar_presence'] == '*'
 
@@ -118,10 +121,11 @@ def makeSolarDisk(ax, sitename, locale, eph, zTime, SolR, TerraR, LunaR,
             xtitleappend = 'Solar disk centered'
             xlabstr = r'$\Delta$'+' '+xlabtag
             ylabstr = r'$\Delta$'+' '+ylabtag
-            legendloc = 'best'  # 'lower left'
+            legendloc = 'upper right'  # 'lower left'
             Centre = SkyCoord([0]*len(Sol), [0]*len(Sol),
                               frame='icrs', unit='deg')
-            xtag = r'$\Delta$'+"points to Mars's North"
+            # xtag = r'$\Delta$'+"points to Mars's North"
+            xtag = ''
 
         # each event gets its own colour
         colormap = iter(plt.cm.rainbow(np.linspace(0, 1, len(eph))))
@@ -144,15 +148,25 @@ def makeSolarDisk(ax, sitename, locale, eph, zTime, SolR, TerraR, LunaR,
                              dec=LunaOff[ii].lat.deg + Centre[ii].dec.deg)
             ax.plot(x, y, color=color, alpha=0.9)
             if not xdrift:
-                x = SMNOff[ii].lon.deg + Centre[ii].ra.deg
-                y = SMNOff[ii].lat.deg + Centre[ii].dec.deg
-                ax.scatter(x, y, color=color, alpha=0.3, marker=10)
+                '''Markers for cardinal directions'''
+                # x = SMNOff[ii].lon.deg + Centre[ii].ra.deg
+                # y = SMNOff[ii].lat.deg + Centre[ii].dec.deg
+                # ax.scatter(x, y, color=color, alpha=0.1, marker=10)
+                ax.text(0, -0.19, 'S', ha='center', va='center')
+                ax.text(0, 0.28, 'N', ha='center', va='center')
+                ax.text(-0.28, 0, 'E', ha='center', va='center')
+                ax.text(0.28, 0, 'W', ha='center', va='center')
 
         ax.set_aspect(1)
-        ax.legend(fontsize='x-small', loc=legendloc)
+        ax.legend(fontsize='small', loc=legendloc)
         # ax.invert_xaxis()
         ax.set(xlabel=xlabstr, ylabel=ylabstr)
         ax.set_title(xtitleappend+' '+xtag)
+
+        if not xdrift:
+            ax.set_xlim([-0.3, 0.3])
+            ax.set_ylim([-0.2, 0.3])
+
         return ax
 
     else:
@@ -168,42 +182,60 @@ def makeSolarDisk(ax, sitename, locale, eph, zTime, SolR, TerraR, LunaR,
         return ax
 
 
-def makeWholeSky(ax, sitename, locale, eph, zTime, Sol):
+def makeWholeSky(ax, sitename, locale, eph, zTime, Sol, latN):
     '''
     Whole sky view for the transit events
-    Looks south - this requires the (angle.ra.deg - 180) as a wrap-around
+    For locations above the sub-solar point of ~ -10N, looks south:
+    this requires the (angle.ra.deg - 180) as a wrap-around
+    For ocations below the sub-solarpoint of ~-10Nm look north:
+    this requires a wrap_at 180
     Plot only center of solar disk:
     the disks themselves are too small to be seen!
     '''
+    latNcutoff = -10
+
+    if latN > latNcutoff:
+        xtag = 'south'
+    else:
+        xtag = 'north'
 
     # each event gets its own colour
     colormap = iter(plt.cm.plasma(np.linspace(0, 1, len(eph))))
     for ii in range(len(eph)):
         color = next(colormap)
-        # x = Sol[ii].ra.wrap_at(180*u.deg).rad
-        x = Angle((Sol[ii].ra.deg - 180)*u.deg).wrap_at(180*u.deg).rad
+        if latN > latNcutoff:
+            x = Angle((Sol[ii].ra.deg - 180)*u.deg).wrap_at(180*u.deg).rad
+        else:
+            x = Sol[ii].ra.wrap_at(180*u.deg).rad
         y = Sol[ii].dec.rad
         ax.scatter(x, y, color=color, marker='+', label=eph['Object'][ii] +
                    " " + eph['Event'][ii] + " " + zTime[ii])
 
-    ax.legend(fontsize='x-small', loc='best')  # 'lower center'
+    ax.legend(fontsize='x-small', loc='upper center', bbox_to_anchor=(1, 0.5))
     ax.grid(True)
-    ax.set_xticklabels(['30°', '60°', '90°', '120°', '150°', '180°',
-                        '210°', '240°', '270°', '300°', '330°'])
-    ax.set_title('Whole sky view looking south')
+    if latN > latNcutoff:
+        ax.set_xticklabels(['30°', '60°', '90°', '120°', '150°', '180°',
+                            '210°', '240°', '270°', '300°', '330°'])
+    else:
+        ax.set_xticklabels(['210°', '240°', '270°', '300°', '330°', '0°',
+                            '30°', '60°', '90°', '120°', '150°'])
+    ax.set_title('Whole sky view looking ' + xtag)
     return ax
 
 
 def siteCentricPlot(surfViz):
     sitelist = surfViz['Site'].data
+
+    sitelatN = surfViz['Latdeg'].data
+
     location = []
     for ijk in range(len(surfViz)):
         location.append(str(np.round(-surfViz['Elondeg'][ijk], 2)) + 'E ' +
                         str(np.round(surfViz['Latdeg'][ijk], 2))+'N')
 
-    for site, locale in zip(sitelist, location):
+    for site, locale, latN in zip(sitelist, location, sitelatN):
         (eph, zTime, SolR, TerraR, LunaR, Sol, Terra,
-         Luna, SMN, TerraOff, LunaOff, SMNOff) = readEPH(site)
+         Luna, SMN, TerraOff, LunaOff, SMNOff) = readEPH(site, latN)
 
         plt.figure(figsize=(16, 6))
         ax1 = plt.subplot(1, 2, 1)
@@ -215,11 +247,11 @@ def siteCentricPlot(surfViz):
                             LunaR, Sol, TerraOff, LunaOff, SMNOff,
                             xdrift=False)
 
-        ax2 = makeWholeSky(ax2, site, locale, eph, zTime, Sol)
+        ax2 = makeWholeSky(ax2, site, locale, eph, zTime, Sol, latN)
 
         # plt.tight_layout()
-        plt.suptitle('Terra & Luna Transit from Mars 2084-11-10 UTC at ' +
-                     site+' '+locale, fontweight='bold')
+        plt.suptitle('Terra & Luna Transit from Martian surface at ' +
+                     site+' '+locale+' on 2084-11-10 UTC', fontweight='bold')
         plt.figtext(0.5, 0.05, misc.xfooter,
                     size=6, horizontalalignment='center')
         plt.savefig('Output/G/'+site+'.pdf')
@@ -232,6 +264,3 @@ mask = surfViz['Site'] == 'EZ22EZ40GaleCrater'
 surfViz = surfViz[np.logical_not(mask)]
 
 siteCentricPlot(surfViz)
-
-# siteCentricPlot(sitename='HCuriosity')
-# siteCentricPlot(sitename='EZ11aErebusMontes')

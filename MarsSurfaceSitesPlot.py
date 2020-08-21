@@ -169,7 +169,7 @@ def makeSurfaceViz(xpdfname, SrfEvts, SrfLongLat):
     plt.figtext(0.5, 0.1, misc.xfooter, size=6,
                 horizontalalignment='center')
     plt.title('Preferred Viewing Locations on Mars ' +
-              'for Earth & Moon Transit 2018-11-10')
+              'for Earth & Moon Transit 2084-11-10')
     plt.colorbar(im, orientation='horizontal', shrink=0.5)
 
     plt.savefig(xpdfname+'.pdf')
