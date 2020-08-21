@@ -203,8 +203,8 @@ def solar_InEgress(eph, transiting_objects):
 
 
 # Download or Read from earlier downloads
-# eph = downloadSolarDiskFlat()
-eph = readSolarDiskFlat()
+eph = downloadSolarDiskFlat()
+# eph = readSolarDiskFlat()
 
 # Calculate angular distances between sun and transiting objects
 # eph2 = cal_angdist(eph, ['T','L']) # your own equations

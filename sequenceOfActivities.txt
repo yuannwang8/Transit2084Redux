@@ -1,0 +1,11 @@
+# sequence of activities
+
+# 0. version control: php install -r requirements.txt
+# 0. manually update MarsSurfaceSites.csv
+
+1. makeDirectories.py
+2. AresCentricDownload.py
+3. AresCentricPlot.py
+4. MarsSurfaceSitesDownload.py
+5. MarsSurfaceSitesPlot.py
+6. SiteCentricPlot.py
