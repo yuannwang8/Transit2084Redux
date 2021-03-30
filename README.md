@@ -9,6 +9,19 @@ This is the second attempt at this project: it improves upon the [attempt made i
 * Now using the [`astropy`](https://www.astropy.org) package for common astrophysics tools to improve on calculation accuracies.
 * Now using the [`astroquery`](https://astroquery.readthedocs.io/en/latest/) package to access the Horizons database. The list of interesting surface sites is curated in `MarsSurfaceSites.csv`.  Elevation details, where not provided, are estimated from [MOLA](https://attic.gsfc.nasa.gov/mola/images.html) imagery.
 
-The sequence of activities can be found in `sequenceOfActivities.txt`. 
-
 Example outputs are in the folder `ExampleOutputs`.
+
+## Sequence of Activities
+
+1.  Manually update `MarsSurfaceSites.csv	
+2.  Install packages `pip install -r requirements.txt` if necessary
+3.  Run scripts in the following order
+    ```
+    python3 makeDirectories.py
+    python3 AresCentricDownload.py
+    python3 AresCentricPlot.py
+    python3 MarsSurfaceSitesDownload.py
+    python3 MarsSurfaceSitesPlot.py
+    python3 SiteCentricPlot.py
+    ```
+
